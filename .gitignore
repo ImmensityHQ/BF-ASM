@@ -1,0 +1,11 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# References
+*.ebnf
+*.asm
+*.bf
+
+.vscode/
