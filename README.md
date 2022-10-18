@@ -8,13 +8,13 @@ BF-ASM will be an easy to use, easy to read assembly-like language that will be 
 Right now BF-ASM is not usable and __WIP__. 
 Feel free to look around the code and contribute any changes.
 
-### Feature Checklist
-- Lexical analysis
+## Feature Checklist
+* Lexical analysis
     - [x] Scanning
     - [x] Tokenizing
     - [x] Yielding tokens
     - [x] (Some) errors
-- Parser (Recursive descent)
+* Parser (Recursive descent)
     - [x] AST Definition (Partially completed, current syntax is super incomplete)
     - [x] Parsing
     - [ ] Errors

@@ -9,3 +9,5 @@ __pycache__/
 *.bf
 
 .vscode/
+
+.DS_Store
