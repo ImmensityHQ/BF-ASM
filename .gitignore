@@ -11,3 +11,6 @@ __pycache__/
 .vscode/
 
 .DS_Store
+
+# Binaries
+bin/
