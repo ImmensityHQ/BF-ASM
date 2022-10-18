@@ -1,6 +1,4 @@
-from ast import literal_eval
-from dataclasses import dataclass
-import error
+import error as err
 import vocab
 
 # ========== AST ==========
@@ -32,9 +30,20 @@ class Literal:
         return token.ttype == "int"
 
 
+class Address:
+    def __init__(self, value) -> None:
+        self.value = value
+
+    def is_address(token: vocab.Token):
+        return token.ttype == "address"
+
+
 class Operand:
-    def __init__(self, operand: Integer):
+    def __init__(self, operand):
         self.operand = operand
+
+    def is_operand(token: vocab.Token):
+        return Integer.is_int(token) or Literal.is_literal(token) or Address.is_address(token)
 
 
 class Expr:
@@ -42,11 +51,9 @@ class Expr:
 
 
 class Line:
-    def __init__(self, opcode, operand=None):
+    def __init__(self, opcode, operands=[]):
         self.opcode: Operation = opcode
-
-        if operand:
-            self.operand: Operand = operand
+        self.operands: list[Operand] = operands
 
 
 class Program:
@@ -72,23 +79,28 @@ class Parser:
 
         return program
 
-    def step(self):
-        self.cur_tok = self.next_tok
-        self.next_tok = next(self.stream, None)
+    def step(self, amount=1):
+        for _ in range(amount):
+            self.cur_tok = self.next_tok
+            self.next_tok = next(self.stream, None)
+
+    def throw_err(self, msg):
+        pos = self.cur_tok.pos
+        err.throw("SyntaxError", msg, pos)
 
     def next_matches(self, tok_type):
         '''Check if a token matches the type of the next token'''
         if self.next_tok and self.next_tok.ttype == tok_type:
-            self.step()
             return True
         else:
             return False
 
-    def expect(self, tok_type):
+    def expect_next(self, tok_type):
         '''Raise error if a token does not match the type of the next token'''
-        if not self.match(tok_type):
-            # TODO: change to bfasm error
-            raise SyntaxError('Expected ' + tok_type)
+        if not self.next_matches(tok_type):
+            self.throw_err(f"Expected {tok_type}")
+        else:
+            return True
 
     def parse_program(self):
         program = Program(lines=[])
@@ -101,36 +113,56 @@ class Parser:
 
     def parse_line(self):
         operation = self.parse_operation()
-        self.step()
+        operands = []
 
-        if self.cur_tok.ttype == "newline":
-            return Line(operation)
-
-        while self.cur_tok.ttype != "newline":
-            operand = self.parse_operand()
+        if self.next_matches("newline"):
+            return Line(operation, operands)
+        else:
             self.step()
 
-        return Line(operation, operand)
+        if Operand.is_operand(self.cur_tok):
+            operands.append(self.parse_operand())
+        else:
+            self.throw_err(f"Expected an operand, got '{self.cur_tok.name}'")
+
+        if self.next_matches == "newline":
+            return Line(operation, operands)
+        elif self.expect_next(","):
+            self.step(2)
+            operands.append(self.parse_operand())
+            return Line(operation, operands)
+
+        self.throw_err("Unexpected syntax error.")
 
     def parse_operation(self):
         if Operation.is_op(self.cur_tok):
             return Operation(self.cur_tok)
         else:
-            pass  # TODO: Return error
+            self.throw_err(
+                f"Expected an operation, got '{self.cur_tok.value}'")
 
     def parse_operand(self):
         if Literal.is_literal(self.cur_tok):
             return Operand(self.parse_literal())
+        elif Address.is_address(self.cur_tok):
+            return Operand(self.parse_address())
+        else:
+            self.throw_err(f"Expected an operand, got '{self.cur_tok.value}'")
+
+    def parse_address(self):
+        if Address.is_address(self.cur_tok):
+            return Address(self.cur_tok)
 
     def parse_literal(self):
-        if Integer.is_int(self.cur_tok):
+        if Literal.is_literal(self.cur_tok):
             return Literal(self.parse_integer())
 
     def parse_integer(self):
         if Integer.is_int(self.cur_tok):
             return Integer(self.cur_tok)
         else:
-            pass  # TODO: Return error
+            pos = self.cur_tok.pos
+            err.thow("SyntaxError", "Expected an Integer", pos)
 
     # def parse_char(self):
     #     pass

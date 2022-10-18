@@ -55,10 +55,12 @@ class Lexer:
         if self.cur_chr == None:
             return token
 
-        while re.match(pattern, self.cur_chr) and re.match(pattern, self.cur_chr):
+        while re.match(pattern, self.cur_chr) or re.fullmatch(pattern, token+self.cur_chr):
             token += self.cur_chr
             self.step()
 
+            if self.cur_chr == None:
+                return token
         return token
 
     def skip_ignored(self):
@@ -105,7 +107,7 @@ class Lexer:
             tok_def = token[0]  # regex pattern defining the token
             tok_name = token[1]
 
-            if re.match(tok_def, self.cur_chr):
+            if re.match(tok_def, self.cur_chr) or re.match(tok_def, self.cur_chr+self.string[self.idx+1]):
                 token = self.scan_while_reg(tok_def)
                 self.save(Token(token, tok_name, self.get_pos()))
                 return True  # a matching token was found

@@ -16,7 +16,7 @@ class Position:
     def get_pointer_str(self):
         '''Creates a string that shows the line, and an arrow pointing to the sidx'''
         res = self.get_line()
-        res += f"\n{' ' * self.sidx}^"
+        res += f"{' ' * self.sidx}^"
         return res
 
 
