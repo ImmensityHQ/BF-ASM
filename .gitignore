@@ -18,3 +18,5 @@ bin/
 # Some test programs
 *.bf
 *.b
+!/interpreter/bench/*.bf
+!/interpreter/bench/*.b
