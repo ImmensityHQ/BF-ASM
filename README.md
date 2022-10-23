@@ -19,7 +19,11 @@ Feel free to look around the code and contribute any changes.
     - [x] Parsing
     - [ ] Errors
 - [ ] Programmatically controllable interpreter class in Python
-- [ ] Rust Interpreter
+
+* Rust Interpreter
+    - [x] Basic functionality
+    - [x] Pre-calculated jump tables
+    - [ ] Repeated operations optimizations
 
 And finally, arguably most important of all:
 - [ ] an actual syntax
