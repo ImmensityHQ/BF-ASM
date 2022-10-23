@@ -14,3 +14,7 @@ __pycache__/
 
 # Binaries
 bin/
+
+# Some test programs
+*.bf
+*.b

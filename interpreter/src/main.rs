@@ -1,10 +1,12 @@
 // WIP
 
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io::Read;
 use std::process;
 
+#[inline]
 fn remove_redundant_code(program: String) -> String {
     return program
         .replace("+-", "")
@@ -15,22 +17,55 @@ fn remove_redundant_code(program: String) -> String {
         .replace("[]", "");
 }
 
+#[inline]
 fn optimize(program: String) -> String {
     let mut prg = program;
     prg = remove_redundant_code(prg);
     return prg;
 }
 
-// fn compute_jmp_table(program: String) -> String {}
+#[inline]
+fn compute_jmp_table(program: &Vec<char>) -> HashMap<usize, usize> {
+    let mut idx = 0;
+    let mut open: u32;
+    let mut jmp_table: HashMap<usize, usize> = HashMap::new();
+    // let mut closed: u32;
+    while idx < program.len() {
+        match program[idx] {
+            '[' => {
+                open = 1;
+                let sidx = idx;
+                let mut scan_idx = idx;
+                while open != 0 {
+                    scan_idx += 1;
+                    match program[scan_idx] {
+                        '[' => open += 1,
+                        ']' => open -= 1,
+                        _ => (),
+                    }
+                }
+                let eidx = scan_idx;
+                jmp_table.insert(sidx, eidx);
+            }
+            ']' => {
+                // closed += 1;
+            }
+            _ => {}
+        }
+        idx += 1;
+    }
+    return jmp_table;
+}
 
+#[inline]
 fn interpret(program: Vec<char>) {
     let mut mem: Vec<u8> = vec![0];
     let mut ptr = 0;
     let mut prg_idx = 0; // program cannot exceed 32-bit integer limit in length
-    let mut open: u32;
-    let mut closed: u32;
+    let jmp_table: HashMap<usize, usize> = compute_jmp_table(&program);
     while prg_idx < program.len() {
         match &program[prg_idx] {
+            // TODO: optimize repeated instructions.
             '+' => {
                 if mem[ptr] == 255 {
                     mem[ptr] = 0;
@@ -70,38 +105,32 @@ fn interpret(program: Vec<char>) {
                 print!("{}", mem[ptr] as char);
             }
             '[' => {
+                /* When the interpreter encounters a '[',
+                it should jump to the matching end ']',
+                but only if the current cell is zero. */
+
+                // Check if the current cell is zero.
                 if mem[ptr] == 0 {
-                    let mut tmp_idx = prg_idx;
-                    open = 1;
-                    while open != 0 {
-                        tmp_idx += 1;
-                        match &program[prg_idx] {
-                            '[' => open += 1,
-                            ']' => open -= 1,
-                            _ => (),
-                        }
-                    }
-                    prg_idx = tmp_idx;
+                    // If the current cell is zero, go to the matching end bracket.
+                    prg_idx = *jmp_table.get(&prg_idx).expect("Cannot find matching ].");
                 }
             }
             ']' => {
+                /* When the interpreter encounters the end of a loop,
+                it should go to the beginning of the loop if the
+                current cell is not zero. */
+
+                // Check if the current cell is not zero
                 if mem[ptr] != 0 {
-                    let mut tmp_idx = prg_idx;
-                    closed = 1;
-                    while closed != 0 {
-                        tmp_idx -= 1;
+                    // if the current cell is not zero, set the program counter to the beginning of the loop
+                    // prg_idx = *jmp_table.get(&prg_idx).expect("Cannot find matching [.");
 
-                        if tmp_idx >= *&program.len() {
-                            panic!("Cannot find matching ]")
-                        }
-
-                        match &program[tmp_idx] {
-                            '[' => closed -= 1,
-                            ']' => closed += 1,
-                            _ => (),
+                    for (key, value) in jmp_table.iter() {
+                        if *value == prg_idx {
+                            prg_idx = *key;
+                            break;
                         }
                     }
-                    prg_idx = tmp_idx;
                 }
             }
             _ => {}
@@ -110,17 +139,21 @@ fn interpret(program: Vec<char>) {
     }
 }
 
+#[inline]
 fn usage() -> String {
     return "Usage: ./bfasm-interpeter filename.bf".to_string();
 }
 
+#[inline]
 fn read_file(filename: String) -> String {
     return fs::read_to_string(filename).expect("Something went wrong reading the file");
 }
 
 fn main() {
-    let mut args: Vec<String> = env::args().collect();
-    args.push("test2.bf".to_string());
+    // TODO: Add proper argument parsing
+    // TODO: ADD a way to print output to file.
+    // e.g. "./interpreter mandelbrot.bf -o mandelbrot.out"
+    let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         println!("{}", usage());
         process::exit(0);
