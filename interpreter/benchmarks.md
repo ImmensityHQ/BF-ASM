@@ -20,6 +20,3 @@ The following is some benchmarks from different versions of the BF-ASM interpret
 | *hello.bf*      | 0.0075 seconds  |
 | *99bottles.bf*  | 0.019 seconds   |
 | *sierpinski.bf* | 0.010 seconds   |
-
-
-*Note: 99bottles.bf and hello.bf were removed from the repo because github was reporting that brainf-ck was the repo's primary programming language.*
