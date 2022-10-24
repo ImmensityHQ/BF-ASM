@@ -18,7 +18,10 @@ Feel free to look around the code and contribute any changes.
     - [x] AST Definition (Partially completed, current syntax is super incomplete)
     - [x] Parsing
     - [ ] Errors
-- [ ] Programmatically controllable interpreter class in Python
+* Codegen
+    - [x] Basic codegen
+    - [ ] Programmatically controllable interpreter class in Python
+    - [ ] Generate code from AST
 
 * Rust Interpreter
     - [x] Basic functionality
