@@ -108,7 +108,7 @@ class Parser:
         while self.next_tok is not None:
             line = self.parse_line()
             program.lines.append(line)
-            self.step()
+            self.step(2)
         return program
 
     def parse_line(self):
@@ -125,7 +125,7 @@ class Parser:
         else:
             self.throw_err(f"Expected an operand, got '{self.cur_tok.name}'")
 
-        if self.next_matches == "newline":
+        if self.next_matches("newline") or self.next_tok is None:
             return Line(operation, operands)
         elif self.expect_next(","):
             self.step(2)
