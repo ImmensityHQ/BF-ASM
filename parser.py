@@ -84,6 +84,10 @@ class Parser:
             self.cur_tok = self.next_tok
             self.next_tok = next(self.stream, None)
 
+            # skip comments
+            if self.next_matches("comment"):
+                self.next_tok = next(self.stream, None)
+
     def throw_err(self, msg):
         pos = self.cur_tok.pos
         err.throw("SyntaxError", msg, pos)
@@ -112,6 +116,9 @@ class Parser:
         return program
 
     def parse_line(self):
+        if self.cur_tok.ttype == "newline":
+            self.step()
+
         operation = self.parse_operation()
         operands = []
 
