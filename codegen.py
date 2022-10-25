@@ -1,4 +1,6 @@
 class CodeGenerator:
+    '''Naive code generator for common BF operations.'''
+
     def __init__(self):
         self.sp = 0
 
@@ -47,6 +49,19 @@ class CodeGenerator:
         '''Generate BF code to set an address to an integer.'''
         return self.goto(address) + self.set_cur(integer)
 
+    def input_addr(self, address: int) -> str:
+        return self.goto(address) + ","
+
+    def dump_addr(self, address: int) -> str:
+        return self.goto(address) + "."
+
+    def dump_array(self, addrs: list[int]):
+        '''Dump all addresses in a list of addresses.'''
+        code = ""
+        for addr in addrs:
+            code += self.goto(addr) + "."
+        return code
+
     def loop(self, code) -> str:
         '''Surround some BF code in a loop.'''
         if isinstance(code, str):
@@ -60,6 +75,23 @@ class CodeGenerator:
             return f"[{looped}]"
 
 
+def remove_redundant_code(code: str) -> str:
+    '''Removes some redundant code from BF code.'''
+    code = code.replace("+-", "")
+    code = code.replace("<>", "")
+    code = code.replace("-+", "")
+    code = code.replace("><", "")
+    code = code.replace("][-]", "]")
+    code = code.replace("[]", "")
+    return code
+
+
+def optimize(code: str) -> str:
+    '''Perform basic optimizations to BF code.'''
+    code = remove_redundant_code(code)
+    return code
+
+
 def main():
     cg = CodeGenerator()
     code = ""
@@ -71,6 +103,8 @@ def main():
     code += cg.goto(10)
     print(cg.loop(code))
     print(cg.sp)
+
+    print(optimize(code))
 
 
 if __name__ == "__main__":

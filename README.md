@@ -17,7 +17,7 @@ Feel free to look around the code and contribute any changes.
 * Parser (Recursive descent)
     - [x] AST Definition (Partially completed, current syntax is super incomplete)
     - [x] Parsing
-    - [ ] Errors
+    - [x] (Some) Errors
 * Codegen
     - [x] Basic codegen
     - [ ] Programmatically controllable interpreter class in Python
