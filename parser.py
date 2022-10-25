@@ -11,6 +11,9 @@ class Operation:
     def is_op(token: vocab.Token):
         return token.ttype in vocab.RESERVED_WORDS
 
+    def __str__(self) -> str:
+        return self.opcode.value
+
 
 class Integer:
     def __init__(self, integer: int) -> None:
@@ -18,6 +21,9 @@ class Integer:
 
     def is_int(token: vocab.Token):
         return token.ttype == "int"
+
+    def __str__(self) -> str:
+        return str(self.integer)
 
 
 class Literal:
@@ -29,13 +35,19 @@ class Literal:
     def is_literal(token: vocab.Token):
         return token.ttype == "int"
 
+    def __str__(self) -> str:
+        return self.value.__str__()
+
 
 class Address:
     def __init__(self, value) -> None:
-        self.value = value
+        self.value = value  # TODO: change to int
 
     def is_address(token: vocab.Token):
         return token.ttype == "address"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class Operand:
@@ -44,6 +56,9 @@ class Operand:
 
     def is_operand(token: vocab.Token):
         return Integer.is_int(token) or Literal.is_literal(token) or Address.is_address(token)
+
+    def __str__(self) -> str:
+        return self.operand.__str__()
 
 
 class Expr:
@@ -55,10 +70,34 @@ class Line:
         self.opcode: Operation = opcode
         self.operands: list[Operand] = operands
 
+    def __str__(self) -> str:
+        res = self.opcode.__str__()
+
+        if len(self.operands) == 1:
+            res += f" {self.operands[0].__str__()}"
+        elif len(self.operands) > 1:
+            res += f" {self.operands[0].__str__()}"
+
+            for operand in self.operands[1:]:
+                res += f", {operand.__str__()}"
+
+        return res
+
 
 class Program:
     def __init__(self, lines) -> None:
         self.lines: list[Line] = lines
+
+    def __str__(self) -> str:
+        res = ""
+        for i, line in enumerate(self.lines):
+            if i < len(self.lines) - 1:
+                res += line.__str__() + "\n"
+            else:
+                res += line.__str__()
+        return res
+
+    # TODO: Add __repr__
 
 
 # ========== --- ==========

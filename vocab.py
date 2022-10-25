@@ -12,6 +12,9 @@ class Token:
     def get_line(self):
         return self.pos.get_line
 
+    def __repr__(self) -> str:
+        return self.value
+
 
 RESERVED_WORDS = ["set", "add", "sub", "input", "dump"]
 
