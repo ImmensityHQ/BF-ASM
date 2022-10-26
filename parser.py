@@ -125,6 +125,7 @@ class Parser:
             self.next_tok = next(self.stream, None)
 
             # skip comments
+            # TODO: add parse_comment()
             if self.next_matches("comment"):
                 self.next_tok = next(self.stream, None)
 

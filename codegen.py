@@ -28,11 +28,10 @@ class CodeGenerator:
 
     def goto_relative(self, amount: int) -> str:
         '''Generate BF code to goto a cell, relative to the current cell.'''
+        self.sp += amount
         if 0 < amount:
-            self.sp += amount
             return self.op(">", amount)
         else:
-            self.sp -= amount
             if self.sp < 0:
                 self.sp = 0
 
@@ -81,38 +80,63 @@ class CodeGenerator:
         elif isinstance(code, list):
             return f"[{self.generate(code)}]"
 
-    def add_addr_to_addr(self, addr1, addr2):
-        res = self.goto(addr1)
-        res += self.loop([
-            self.sub(),
-            self.goto(addr2),
-            self.add(),
-            self.goto(addr1)
-        ])
-        return res
 
+class Optimizer:
+    def __init__(self, program) -> None:
+        self.program = program
 
-def remove_redundant_code(code: str) -> str:
-    '''Removes some redundant code from BF code.'''
-    code = code.replace("+-", "")
-    code = code.replace("<>", "")
-    code = code.replace("-+", "")
-    code = code.replace("><", "")
-    code = code.replace("][-]", "]")
-    code = code.replace("[]", "")
-    return code
+        self.pc = 0
+        self.cur_chunk = ""
+        self.next_chunk = ""
 
+    def peek_next(self):
+        return self.program[self.pc + 1]
 
-def optimize(code: str) -> str:
-    '''Perform basic optimizations to BF code.'''
-    code = remove_redundant_code(code)
-    return code
+    def get_next_chunk(self):
+        if self.pc > len(self.program) - 1:
+            return None
+
+        next_chunk = ""
+        scanning_char = self.program[self.pc]
+
+        while scanning_char == self.program[self.pc]:
+            next_chunk += self.program[self.pc]
+            self.pc += 1
+
+        return next_chunk
+
+    def step_chunk(self, chunks=1):
+        for _ in range(chunks):
+            self.cur_chunk = self.next_chunk
+            self.next_chunk = self.get_next_chunk()
+
+    def remove_redundant_code(self, code: str) -> str:
+        '''Removes some redundant code from BF code.'''
+        code = code.replace("+-", "")
+        code = code.replace("<>", "")
+        code = code.replace("-+", "")
+        code = code.replace("><", "")
+        code = code.replace("][-]", "]")
+        code = code.replace("[]", "")
+        return code
+
+    def optimize(self, code: str) -> str:
+        '''Perform basic optimizations to BF code.'''
+        code = self.remove_redundant_code(code)
+        self.step_chunk(10)
+        return code
 
 
 def main():
     cg = CodeGenerator()
     code = ""
-    code += cg.add_addr_to_addr(0, 1)
+    code += cg.add_addr(10, 0)
+    code += cg.add_addr(10, 1)
+    code += cg.dump_array([0, 1])
+
+    opt = Optimizer(code)
+
+    code = opt.optimize(code)
     print(code)
 
 
