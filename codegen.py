@@ -4,13 +4,23 @@ class CodeGenerator:
     def __init__(self):
         self.sp = 0
 
-    def add(self, amount: int) -> str:
-        '''Generate BF code to add an integer to the current cell.'''
-        return "+" * amount
+    def generate(self, funcs):
+        '''Generate a list of codegen functions.'''
+        res = ""
+        for func in funcs:
+            res += func
+        return res
 
-    def sub(self, amount: int) -> str:
+    def op(self, command: str, amount: int) -> str:
+        return command * amount
+
+    def add(self, amount: int = 1) -> str:
+        '''Generate BF code to add an integer to the current cell.'''
+        return self.op("+", amount)
+
+    def sub(self, amount: int = 1) -> str:
         '''Generate BF code to subtract an integer from the current cell.'''
-        return "-" * amount
+        return self.op("-", amount)
 
     def set_cur(self, integer: int) -> str:
         '''Generate BF code to set current cell to an integer.'''
@@ -20,13 +30,13 @@ class CodeGenerator:
         '''Generate BF code to goto a cell, relative to the current cell.'''
         if 0 < amount:
             self.sp += amount
-            return ">" * amount
+            return self.op(">", amount)
         else:
-            self.sp - amount
+            self.sp -= amount
             if self.sp < 0:
                 self.sp = 0
 
-            return "<" * abs(amount)
+            return self.op("<", abs(amount))
 
     def goto(self, address: int) -> str:
         '''Generate BF code to goto a cell.'''
@@ -69,10 +79,17 @@ class CodeGenerator:
 
         # list of code generator functions [add(), goto(), etc.]
         elif isinstance(code, list):
-            looped = ""
-            for i in code:
-                looped += i
-            return f"[{looped}]"
+            return f"[{self.generate(code)}]"
+
+    def add_addr_to_addr(self, addr1, addr2):
+        res = self.goto(addr1)
+        res += self.loop([
+            self.sub(),
+            self.goto(addr2),
+            self.add(),
+            self.goto(addr1)
+        ])
+        return res
 
 
 def remove_redundant_code(code: str) -> str:
@@ -95,16 +112,8 @@ def optimize(code: str) -> str:
 def main():
     cg = CodeGenerator()
     code = ""
-    code += cg.add(2)
-    code += cg.goto(5)
-    code += cg.sub(2)
-    code += cg.goto(0)
-    code += cg.sub(2)
-    code += cg.goto(10)
-    print(cg.loop(code))
-    print(cg.sp)
-
-    print(optimize(code))
+    code += cg.add_addr_to_addr(0, 1)
+    print(code)
 
 
 if __name__ == "__main__":
