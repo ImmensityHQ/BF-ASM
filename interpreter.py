@@ -5,7 +5,7 @@ class Interpreter:
         self.mem = mem  # memory
         self.pointer = pointer
 
-        self.output = []
+        self.output = ""
 
     def set_cell(self, cell, integer):
         self.mem[cell] = integer
@@ -29,7 +29,7 @@ class Interpreter:
             self.pointer = 0
 
     def dump(self):
-        print(chr(self.mem[self.pointer]), end="")
+        self.output += chr(self.mem[self.pointer])
 
     def interp_short(self, program, inputs=[]):
         # program counter is not needed, since loops aren't handled in this class
