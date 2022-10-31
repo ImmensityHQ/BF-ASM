@@ -1,10 +1,13 @@
-class CodeGenerator:
+import parser
+
+
+class codegen:
     '''Naive code generator for common BF operations.'''
 
     def __init__(self):
         self.sp = 0
 
-    def generate(self, funcs):
+    def generate_list(self, funcs):
         '''Generate a list of codegen functions.'''
         res = ""
         for func in funcs:
@@ -86,22 +89,30 @@ class Optimizer:
         self.program = program
 
         self.pc = 0
+        self.cur_char = ""
         self.cur_chunk = ""
         self.next_chunk = ""
 
-    def peek_next(self):
-        return self.program[self.pc + 1]
+    def step(self):
+        self.pc += 1
+
+        if self.pc > len(self.program) - 1:
+            self.cur_char = None
+        else:
+            self.cur_char = self.program[self.pc]
 
     def get_next_chunk(self):
-        if self.pc > len(self.program) - 1:
-            return None
-
         next_chunk = ""
-        scanning_char = self.program[self.pc]
 
-        while scanning_char == self.program[self.pc]:
-            next_chunk += self.program[self.pc]
-            self.pc += 1
+        # Make sure to step if we are at the beginning of the program string
+        if self.cur_char == "":
+            self.step()
+
+        scanning_char = self.cur_char
+
+        while self.cur_char == scanning_char and self.cur_char is not None:
+            next_chunk += self.cur_char
+            self.step()
 
         return next_chunk
 
@@ -120,24 +131,65 @@ class Optimizer:
         code = code.replace("[]", "")
         return code
 
+    def remove_non_bf(self, code: str) -> str:
+        '''Remove all non-BF characters.'''
+        # TODO: there's probably a better way to do this
+        res = ""
+
+        for char in code:
+            if char in "+-<>,.[]":
+                res += char
+
+        return res
+
     def optimize(self, code: str) -> str:
         '''Perform basic optimizations to BF code.'''
         code = self.remove_redundant_code(code)
+        code = self.remove_non_bf(code)
         self.step_chunk(10)
         return code
 
 
+class CodeGenerator:
+    def __init__(self, program: parser.Program) -> None:
+        self.program = program
+        self.mem = []
+        self.cg = codegen()
+        self.prg_out = ""
+
+    def gen_add(self, value: int, target: parser.Address) -> str:
+        self.prg_out += self.cg.add_addr(value, target.value.address)
+
+    def gen_sub(self, value: int, target: parser.Address) -> str:
+        self.prg_out += self.cg.sub_addr(value, target.value.address)
+
+    def gen_set(self, value: int, target: parser.Address) -> str:
+        self.prg_out += self.cg.set_addr(value, target.value.address)
+
+    def gen_code(self) -> str:
+        for line in self.program.lines:
+            match line.opcode.token.value:
+                case "add":
+                    self.gen_add(line.operands[0], line.operands[1])
+                case "sub":
+                    self.gen_sub(line.operands[0], line.operands[1])
+                case "set":
+                    self.gen_set(line.operands[0], line.operands[1])
+                case "dump":
+                    self.gen_dump()
+        return self.prg_out
+
+
 def main():
-    cg = CodeGenerator()
-    code = ""
-    code += cg.add_addr(10, 0)
-    code += cg.add_addr(10, 1)
-    code += cg.dump_array([0, 1])
+    import lexer
 
-    opt = Optimizer(code)
-
-    code = opt.optimize(code)
-    print(code)
+    file = lexer.LexingFile("test.asm")
+    lex = lexer.Lexer(file)
+    tokens = lex.lex()
+    _parser = parser.Parser()
+    ast = _parser.parse(tokens)
+    cg = CodeGenerator(ast)
+    print(cg.gen_code())
 
 
 if __name__ == "__main__":

@@ -1,19 +1,20 @@
+import re
+
 import error as err
 import vocab
-
 
 # ========== AST ==========
 
 
 class Operation:
-    def __init__(self, opcode: str):
-        self.opcode = opcode
+    def __init__(self, token: vocab.Token):
+        self.token = token
 
     def is_op(token: vocab.Token):
         return token.ttype in vocab.RESERVED_WORDS
 
     def __str__(self) -> str:
-        return self.opcode.value
+        return self.token.value
 
 
 class Integer:
@@ -30,8 +31,9 @@ class Integer:
 class Literal:
     '''Char, Integer, etc.'''
 
-    def __init__(self, value) -> None:
-        self.value = value
+    def __init__(self, value: vocab.Token) -> None:
+        self.value = int(value.integer.value)
+        self.v = "sb"
 
     def is_literal(token: vocab.Token):
         return token.ttype == "int"
@@ -41,25 +43,25 @@ class Literal:
 
 
 class Address:
-    def __init__(self, value) -> None:
-        self.value = value  # TODO: change to int
+    def __init__(self, address: vocab.Token) -> None:
+        self.address = int(re.sub(r'[^0-9]', '', address.value))
 
     def is_address(token: vocab.Token):
         return token.ttype == "address"
 
     def __str__(self) -> str:
-        return self.value
+        return self.address
 
 
 class Operand:
-    def __init__(self, operand):
-        self.operand = operand
+    def __init__(self, value):
+        self.value = value
 
     def is_operand(token: vocab.Token):
         return Integer.is_int(token) or Literal.is_literal(token) or Address.is_address(token)
 
     def __str__(self) -> str:
-        return self.operand.__str__()
+        return self.value.__str__()
 
 
 class Expr:
