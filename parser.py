@@ -6,51 +6,45 @@ import vocab
 # ========== AST ==========
 
 
-class Operation:
-    def __init__(self, token: vocab.Token):
+class Atom:
+    '''Contains a Token, and some methods to interact with the token'''
+
+    def __init__(self, token: vocab.Token) -> None:
         self.token = token
 
-    def is_op(token: vocab.Token):
-        return token.ttype in vocab.RESERVED_WORDS
+    def get_value(self):
+        return self.token.value
 
     def __str__(self) -> str:
         return self.token.value
 
 
-class Integer:
-    def __init__(self, integer: int) -> None:
-        self.integer = integer
+class Opcode(Atom):
+    def is_op(token: vocab.Token):
+        return token.ttype in vocab.RESERVED_WORDS
 
+
+class Integer(Atom):
     def is_int(token: vocab.Token):
         return token.ttype == "int"
 
-    def __str__(self) -> str:
-        return str(self.integer)
 
-
-class Literal:
+class Literal():
     '''Char, Integer, etc.'''
 
-    def __init__(self, value: vocab.Token) -> None:
-        self.value = int(value.integer.value)
-        self.v = "sb"
+    def __init__(self, value: Integer) -> None:
+        self.value = value
 
     def is_literal(token: vocab.Token):
-        return token.ttype == "int"
+        return Integer.is_int(token)
 
     def __str__(self) -> str:
         return self.value.__str__()
 
 
-class Address:
-    def __init__(self, address: vocab.Token) -> None:
-        self.address = int(re.sub(r'[^0-9]', '', address.value))
-
+class Address(Atom):
     def is_address(token: vocab.Token):
         return token.ttype == "address"
-
-    def __str__(self) -> str:
-        return self.address
 
 
 class Operand:
@@ -70,20 +64,25 @@ class Expr:
 
 class Line:
     def __init__(self, opcode, operands=[]):
-        self.opcode: Operation = opcode
+        self.opcode: Opcode = opcode
         self.operands: list[Operand] = operands
 
     def __str__(self) -> str:
         res = self.opcode.__str__()
 
+        # If the operation has 1 operand ("reset $1")
         if len(self.operands) == 1:
+            # Add the operand
             res += f" {self.operands[0].__str__()}"
+        # Else if the operation has more than 1 operand ("set $5, 1")
         elif len(self.operands) > 1:
+            # Add the first operand
             res += f" {self.operands[0].__str__()}"
 
             for operand in self.operands[1:]:
                 res += f", {operand.__str__()}"
 
+        # Otherwise the operation has no operands ("reset")
         return res
 
 
@@ -162,7 +161,7 @@ class Parser:
         if self.cur_tok.ttype == "newline":
             self.step()
 
-        operation = self.parse_operation()
+        operation = self.parse_opcode()
         operands = []
 
         if self.next_matches("newline"):
@@ -184,9 +183,9 @@ class Parser:
 
         self.throw_err("Unexpected syntax error.")
 
-    def parse_operation(self):
-        if Operation.is_op(self.cur_tok):
-            return Operation(self.cur_tok)
+    def parse_opcode(self):
+        if Opcode.is_op(self.cur_tok):
+            return Opcode(self.cur_tok)
         else:
             self.throw_err(
                 f"Expected an operation, got '{self.cur_tok.value}'")
@@ -202,10 +201,15 @@ class Parser:
     def parse_address(self):
         if Address.is_address(self.cur_tok):
             return Address(self.cur_tok)
+        else:
+            pos = self.cur_tok.pos
+            err.thow("SyntaxError", "Expected an Address", pos)
 
     def parse_literal(self):
         if Literal.is_literal(self.cur_tok):
-            return Literal(self.parse_integer())
+            # This integer check is not needed right now, since the only literal is int
+            if Integer.is_int(self.cur_tok):
+                return Literal(self.parse_integer())
 
     def parse_integer(self):
         if Integer.is_int(self.cur_tok):

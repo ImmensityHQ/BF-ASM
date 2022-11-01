@@ -12,8 +12,16 @@ class Token:
     def get_line(self):
         return self.pos.get_line
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
+        if self.ttype == "newline":
+            return self.ttype
         return self.value
+
+    def __repr__(self) -> str:
+        if self.ttype == "newline":
+            return f"Token('\\n', {self.ttype})"
+        else:
+            return f"Token('{self.value}', {self.ttype})"
 
 
 RESERVED_WORDS = ["set", "add", "sub", "input", "dump"]
