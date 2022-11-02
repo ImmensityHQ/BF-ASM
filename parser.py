@@ -1,9 +1,5 @@
-import re
-
 import error as err
 import vocab
-
-# ========== AST ==========
 
 
 class Atom:
@@ -58,8 +54,8 @@ class Operand:
         return self.value.__str__()
 
 
-class Expr:
-    pass  # TODO: Implement Expr, BinOP, etc.
+# class Expr:
+#     pass  # TODO: Implement Expr, BinOP, etc.
 
 
 class Line:
@@ -100,9 +96,6 @@ class Program:
         return res
 
     # TODO: Add __repr__
-
-
-# ========== --- ==========
 
 
 class Parser:
