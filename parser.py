@@ -151,8 +151,10 @@ class Parser:
         return program
 
     def parse_line(self):
-        if self.cur_tok.ttype == "newline":
+        while self.cur_tok.ttype == "newline":
             self.step()
+            if self.next_tok is None:
+                return Line(None, [])
 
         operation = self.parse_opcode()
         operands = []
@@ -181,7 +183,7 @@ class Parser:
             return Opcode(self.cur_tok)
         else:
             self.throw_err(
-                f"Expected an operation, got '{self.cur_tok.value}'")
+                f"Expected an operation, got '{self.cur_tok}'")
 
     def parse_operand(self):
         if Literal.is_literal(self.cur_tok):
@@ -189,14 +191,13 @@ class Parser:
         elif Address.is_address(self.cur_tok):
             return Operand(self.parse_address())
         else:
-            self.throw_err(f"Expected an operand, got '{self.cur_tok.value}'")
+            self.throw_err(f"Expected an operand, got '{self.cur_tok}'")
 
     def parse_address(self):
         if Address.is_address(self.cur_tok):
             return Address(self.cur_tok)
         else:
-            pos = self.cur_tok.pos
-            err.thow("SyntaxError", "Expected an Address", pos)
+            self.throw_err(f"Expected an Address, got '{self.cur_tok}'")
 
     def parse_literal(self):
         if Literal.is_literal(self.cur_tok):
@@ -208,8 +209,7 @@ class Parser:
         if Integer.is_int(self.cur_tok):
             return Integer(self.cur_tok)
         else:
-            pos = self.cur_tok.pos
-            err.thow("SyntaxError", "Expected an Integer", pos)
+            self.throw_err(f"Expected an Integer, got '{self.cur_tok}'")
 
     # def parse_char(self):
     #     pass

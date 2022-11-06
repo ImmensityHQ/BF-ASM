@@ -46,25 +46,32 @@ class Lexer:
         self.tokens.append(token)
 
     def scan_ahead(self, relative_idx):
+        '''Return character n characters ahead of current idx'''
         return self.string[self.idx+relative_idx]
 
     def scan_while_reg(self, pattern):
         token = self.cur_chr
+        sidx = self.lidx
         self.step()
 
-        if self.cur_chr == None:
-            return token
+        if self.cur_chr == None or self.cur_chr == "\n" or token == "\n":
+            eidx = sidx
+            pos = err.Position(self.filename, self.lineno, sidx, eidx)
+            return token, pos
 
         while re.match(pattern, self.cur_chr) or re.fullmatch(pattern, token+self.cur_chr):
             token += self.cur_chr
             self.step()
 
             if self.cur_chr == None:
-                return token
-        return token
+                break
+
+        eidx = self.lidx - 1
+        pos = err.Position(self.filename, self.lineno, sidx, eidx)
+        return token, pos
 
     def skip_ignored(self):
-        '''Skips anything that should be ignore by stepping to the next character.'''
+        '''Skips anything that should be ignored by stepping to the next character.'''
         for rule in IGNORE:
             if re.match(rule, self.cur_chr):
                 self.step()
@@ -78,22 +85,26 @@ class Lexer:
     def eval_reserved_word(self):
         '''Steps through and saves reserved words'''
         for word in RESERVED_WORDS:
+            # we don't need to scan further if the first character isn't alphabetic
             if not self.cur_chr.isalpha():
                 break
 
             if self.cur_chr != word[0]:
                 continue
 
+            sidx = self.lidx
             is_word = True
 
             for i in range(len(word)):
                 if self.scan_ahead(i) == word[i]:
+                    eidx = self.lidx + i
                     continue
                 else:
                     is_word = False
 
             if is_word == True:
-                self.save(Token(word, word, self.get_pos()))
+                pos = err.Position(self.filename, self.lineno, sidx, eidx)
+                self.save(Token(word, word, pos))
                 self.step(len(word))
                 return True  # A reserved word was found and saved
             else:
@@ -108,8 +119,8 @@ class Lexer:
             tok_name = token[1]
 
             if re.match(tok_def, self.cur_chr) or re.match(tok_def, self.cur_chr+self.string[self.idx+1]):
-                token = self.scan_while_reg(tok_def)
-                self.save(Token(token, tok_name, self.get_pos()))
+                token, pos = self.scan_while_reg(tok_def)
+                self.save(Token(token, tok_name, pos))
                 return True  # a matching token was found
         return False  # matching token was not found
 
@@ -139,4 +150,4 @@ if __name__ == "__main__":
     stream = lexer.lex()
 
     for token in stream:
-        print(token)
+        print(token.ttype, token.pos.sidx, token.pos.eidx)

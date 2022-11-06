@@ -35,6 +35,7 @@ TOKENS = [
     (r"(\r|\n)", "newline")
 ]
 
+# TODO: add comments to ignore
 IGNORE = [
     r"[^\S\r\n]"  # matches every whitespace character except newlines
 ]
